@@ -1,0 +1,27 @@
+Textos completos
+	codVendedor 	nome 	dataNascimento 	endereco 	cep 	telefone 	codCidade 	dataContratacao 	codDepartamento 
+    1)
+    SELECT codVendedor, nome, endereco,codCidade, cep from vendedor;	
+
+    2)
+    SELECT codVenda, dataVenda, nome FROM venda, vendedor WHERE status = "Despachada";
+
+    3)
+    SELECT * FROM cliente where endereco = "Rua Marechal Floriano, 56";
+
+    4)
+    SELECT * FROM clienteJuridico; 
+
+    5)
+    SELECT nomeFantasia, endereco, telefone, nome, siglaEstado from clienteJuridico, cliente, estado WHERE dataCadastro BETWEEN '1999-01-01' AND '2003-06-30';
+
+    6)
+    SELECT nome FROM vendedor, clienteFisico WHERE nomeFantasia = "Gelinski";
+
+    7)
+    SELECT codProduto, numeroLote, descricao FROM produtoLote, produto WHERE dataValidade > '2000-10-10';
+
+    8)
+    SELECT d.nome AS nome_departamento, v.nome AS nome_vendedor
+    FROM departamento AS d
+    JOIN vendedor AS v ON d.codDepartamento = v.codDepartamento;

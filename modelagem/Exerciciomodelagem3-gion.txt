@@ -1,0 +1,217 @@
+-- TABELA DEPARTAMENTO ---
+
+CREATE TABLE departamento (
+	codDepartamento INT AUTO_INCREMENT PRIMARY KEY,
+    nome VARCHAR (40) UNIQUE NOT NULL,
+    descricaoFuncional VARCHAR(80),
+    localizao LONGTEXT
+    );
+
+
+-- TABELA ESTADO --
+
+CREATE TABLE estado (
+    siglaEstado VARCHAR(2) PRIMARY KEY,
+    nome VARCHAR(30) UNIQUE NOT NULL
+    );
+
+
+-- TABELA cidade --
+
+CREATE TABLE cidade (
+	codCidade serial PRIMARY KEY,
+	nome varchar(50) UNIQUE NOT NULL,
+	siglaEstado char(2) NOT NULL REFERENCES estado(siglaEstado) ON DELETE no action ON UPDATE cascade
+    );
+
+
+-- TABELA VENDEDOR -- 
+
+CREATE TABLE vendedor(
+	codvendedor serial PRIMARY KEY,
+	nome varchar(60) NOT NULL,
+	dataNascimento date,
+	endereco varchar(60),
+	cep char(8),
+	telefone varchar(20),
+	codCidade int default 1,
+	dataContratacao date default (current_date),
+	codDepartamento int,
+	FOREIGN KEY (codDepartamento) REFERENCES departamento (codDepartamento) ON DELETE set null 
+	ON UPDATE cascade,
+	FOREIGN KEY (codCidade) REFERENCES cidade (codCidade) ON DELETE cascade ON UPDATE cascade
+    );
+
+
+-- TABELA CLIENTE -- 
+
+CREATE TABLE cliente (
+	codCliente serial PRIMARY KEY,
+	endereco varchar(60),
+	codCidade int NOT NULL,
+	telefone varchar(20),
+	tipo char(1), 
+	dataCadastro date default (current_date),
+	cep char(8),
+	CONSTRAINT fk_cli_cid FOREIGN KEY (codCidade) REFERENCES cidade (codCidade) ON DELETE no action ON UPDATE cascade);
+
+
+-- TABELA CLienteFisico --
+
+CREATE TABLE clienteFisico (
+    codCliente int PRIMARY KEY AUTO_INCREMENT,
+    nome VARCHAR(50) NOT NULL,
+    dataNascimento DATE,
+    cpf VARCHAR(11) NOT NULL UNIQUE,
+    rg VARCHAR(8),
+    FOREIGN KEY (codCliente) REFERENCES client (codCliente) ON DELETE NO ACTION ON UPDATE CASCADE
+    );
+
+
+-- TABELA ClienteJuridico --
+
+CREATE TABLE clienteJuridico (
+    codCliente INT AUTO_INCREMENT PRIMARY KEY,
+    nomeFantasia VARCHAR(80) UNIQUE,
+    razaoSocial VARCHAR(80) UNIQUE NOT NULL,
+    ie VARCHAR(20) UNIQUE NOT NULL,
+    cgc VARCHAR(20) UNIQUE NOT NULL,
+    FOREIGN KEY (codCliente) REFERENCES cliente (codCliente) ON DELETE NO ACTION ON UPDATE CASCADE
+    );
+
+
+-- TABELA Classe -- 
+
+CREATE TABLE classe (
+    codClasse INT AUTO_INCREMENT PRIMARY KEY,
+    sigla VARCHAR (12),
+    nome VARCHAR (40) NOT NULL,
+    descricao VARCHAR (80)
+    );
+
+
+-- TABELA PRODUTO --
+
+CREATE TABLE produto (
+    codProduto INT AUTO_INCREMENT PRIMARY KEY,
+    descricao VARCHAR(40) NOT NULL,
+    unidadeMedida CHAR(2),
+    embalagem VARCHAR(15) DEFAULT "Fardo",
+    codClasse INT,
+    precoVenda DECIMAL (14, 2),
+    estoqueMinimo DECIMAL (14,2),
+    FOREIGN KEY (codClasse) REFERENCES classe (codClasse) ON DELETE SET NULL ON UPDATE SET NULL
+    );
+
+
+-- TABELA produtoLote --
+
+CREATE TABLE produtoLote (
+    codProduto INT AUTO_INCREMENT,
+    numeroLote INT,
+    quantidadeAdquirida DECIMAL (16, 2),
+    quantidadeVendida DECIMAL (16, 2),
+    precoCusto DECIMAL (16, 2),
+    dataValidade DATE,
+    PRIMARY KEY(codProduto, numeroLote),
+    FOREIGN KEY (codProduto) REFERENCES produto (codProduto) ON DELETE CASCADE ON UPDATE CASCADE
+    );
+
+
+-- TABELA VENDA -- 
+
+CREATE TABLE venda (
+    codVenda INT PRIMARY KEY,
+    codCliente INT,
+    codVendedor INT DEFAULT 100,
+    dataVenda DATE DEFAULT (CURRENT_DATE),
+    enderecoEntrega VARCHAR(60),
+    estatus VARCHAR(30),
+    FOREIGN KEY (codCLiente) REFERENCES cliente (codCliente) ON DELETE CASCADE,
+    FOREIGN KEY (codVendedor) REFERENCES vendedor (codVendedor) ON DELETE SET NULL ON UPDATE CASCADE
+    );
+
+
+-- TABELA ItemVenda --
+
+CREATE TABLE itemVenda (
+    codVenda INT AUTO_INCREMENT,
+    codProduto INT,
+    numeroLote INT,
+    quantidade DECIMAL(16, 2) NOT NULL CHECK (quantidade > 0),
+    PRIMARY KEY (codProduto, codVenda, numeroLote),
+    FOREIGN KEY (codVenda) REFERENCES venda (codVenda) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (codProduto) REFERENCES produto (codProduto),
+    FOREIGN KEY (codProduto, numeroLote) REFERENCES produtoLote (codProduto, numeroLote) ON DELETE NO ACTION
+);
+
+
+-- TABELA Fornecedor --
+
+CREATE TABLE fornecedor (
+    codFornecedor INT AUTO_INCREMENT PRIMARY KEY,
+    nomeFantasia VARCHAR(80) UNIQUE,
+    razaoSocial VARCHAR(80) UNIQUE NOT NULL,
+    ie VARCHAR(20) UNIQUE NOT NULL,
+    cgc VARCHAR(20) UNIQUE NOT NULL,
+    endereco VARCHAR(60),
+    telefone VARCHAR(20),
+    codCidade INT,
+    FOREIGN KEY (codCidade) REFERENCES cidade (codCidade) ON DELETE NO ACTION ON UPDATE CASCADE
+    );
+
+
+-- TABELA Pedido --
+
+CREATE TABLE pedido (
+    codPedido INT AUTO_INCREMENT PRIMARY KEY,
+    dataRealização DATE DEFAULT (CURRENT_DATE),
+    dataEntrega DATE,
+    codFornecedor INT,
+    valor DECIMAL (22,2),
+    FOREIGN KEY (codFornecedor) REFERENCES fornecedor (codFornecedor) ON DELETE CASCADE ON UPDATE SET NULL
+    );
+
+
+
+-- Tabela ItemPedido --
+CREATE TABLE itemPedido (
+    codPedido INT,
+    codProduto INT,
+    quantidade DECIMAL (16, 2) NOT NULL CHECK (quantidade > 0),
+    PRIMARY KEY (codPedido, codProduto),
+    FOREIGN KEY (codPedido) REFERENCES pedido (codPedido) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (codProduto) REFERENCES produto (codProduto)
+    );
+
+
+-- Tabela ContasPagar -- 
+
+CREATE TABLE contasPagar (
+    codTitulo INT PRIMARY KEY,
+    dataVencimento DATE NOT NULL,
+    parcela INT,
+    codPedido INT,
+    valor DECIMAL(22,2),
+    dataPagamento DATE,
+    localPagamento VARCHAR(80),
+    juros DECIMAL (14,2),
+    correcaoMonetaria DECIMAL (14, 2),
+    FOREIGN KEY(codPedido) REFERENCES pedido (codPedido) ON DELETE CASCADE 
+);
+
+
+-- Tabela ContasReceber --
+
+CREATE TABLE contasReceber (
+    codTitulo INT PRIMARY KEY,
+    dataVencimento DATE NOT NULL,
+    codVenda  INT NOT NULL,
+    parcela INT,
+    valor DECIMAL (22, 2),
+    dataPagamento DATE,
+    localPagamento VARCHAR(80),
+    juros DECIMAL (14, 2),
+    correcaoMonetaria DECIMAL (14, 2),
+    FOREIGN KEY (codVenda) REFERENCES venda (codVenda) ON DELETE CASCADE  ON UPDATE CASCADE
+    );

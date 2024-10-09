@@ -1,0 +1,168 @@
+
+-- TABELA DEPARTAMENTO ---
+CREATE TABLE departamento (
+	codDepartamento INT AUTO_INCREMENT PRIMARY KEY,
+    nome VARCHAR (40) UNIQUE NOT NULL,
+    descricaoFuncional VARCHAR(80),
+    localizao LONGTEXT
+    );
+
+
+-- TABELA ESTADO --
+CREATE TABLE estado (
+    siglaEstado VARCHAR(2) PRIMARY KEY,
+    nome VARCHAR(30) UNIQUE NOT NULL
+    );
+
+
+-- TABELA CIDADE --
+CREATE TABLE cidade(
+    codCidade INT AUTO_INCREMENT PRIMARY KEY,
+    nome VARCHAR(50) UNIQUE NULL,
+    siglaEstado VARCHAR(2) NOT NULL,
+    FOREIGN KEY (siglaEstado) REFERENCES estado (siglaEstado) 
+    ); 
+
+
+-- TABELA VENDEDOR --
+CREATE TABLE vendedor (
+    codVendedor INT AUTO_INCREMENT PRIMARY KEY,
+    nome VARCHAR (60) NOT NULL,
+    dataNascimento DATE,
+    endereco VARCHAR(60),
+    cep CHAR(8),
+    telefone VARCHAR(20),
+    codCidade int,
+    FOREIGN KEY (codCidade) REFERENCES cidade (codCidade) 
+    dataContratacao DATE DEFAULT (CURRENT_DATE),
+    codDepartamento INT,
+    FOREIGN KEY (codDepartamento) REFERENCES departamento (codDepartamento) 
+    );
+
+
+-- TABELA CLIENTE -- 
+CREATE TABLE cliente (
+    codCliente INT AUTO_INCREMENT PRIMARY KEY,
+    endereco VARCHAR(60),
+    codCidade int NOT NULL,
+    FOREIGN KEY (codCidade) REFERENCES cidade (codCidade), 
+    telefone VARCHAR(20),
+    tipo  VARCHAR(1) CHECK (tipo in ("F", "j")),
+    dataCasdastro DATE DEFAULT (CURRENT_DATE),
+    cep CHAR(8)
+    );
+
+
+-- TABELA CLIENTEFISICO -- 
+CREATE TABLE clienteFisico (
+    codCliente int PRIMARY KEY,
+    FOREIGN KEY (codCliente) REFERENCES cliente (codCliente), 
+    nome VARCHAR (50) NOT NULL,
+    dataNascimento DATE,
+    cpf VARCHAR(11) NOT NULL UNIQUE,
+    rg VARCHAR(8)
+    );
+
+
+-- TABELA CLIENTEJURIDICO --
+CREATE TABLE clienteJuridico (
+    codCliente int PRIMARY KEY,
+    FOREIGN KEY (codCliente) REFERENCES cliente (codCliente), 
+    nomeFantasia VARCHAR(80) UNIQUE,
+    razaoSocial VARCHAR(80) NOT NULL UNIQUE,
+    ie VARCHAR(20) NOT NULL UNIQUE,
+    cgc VARCHAR(20) NOT NULL UNIQUE
+    );
+
+
+-- TABELA CLASSE -- 
+CREATE TABLE classe (
+    codClasse INT AUTO_INCREMENT PRIMARY KEY,
+    sigla VARCHAR (12),
+    nome VARCHAR (40) NOT NULL,
+    descricao VARCHAR (80)
+    );
+
+
+-- TABELA PRODUTO --
+CREATE TABLE produto (
+    codProduto INT AUTO_INCREMENT PRIMARY KEY,
+    descricao VARCHAR(40) NOT NULL,
+    unidadeMedida CHAR(2),
+    embalagem VARCHAR(15) DEFAULT "Fardo",
+    codCLasse int,
+    FOREIGN KEY (codClasse) REFERENCES classe (codClasse) 
+    precoVenda DECIMAL (14, 2),
+    estoqueMinimo DECIMAL (14, 2)
+    );
+
+
+-- TABELA ProdutoLote --
+CREATE TABLE produtoLote (
+    codProduto int PRIMARY KEY,
+    FOREIGN KEY (codProduto) REFERENCES produto (codProduto), 
+    numeroLote int PRIMARY KEY,
+    quantidadeAdiquirida DECIMAL(14, 2),
+    quantidadeVendida DECIMAL (14, 2),
+    precoCusto DECIMAL (14, 2),
+    dataValidade DATE
+    );
+
+
+-- TABELA VENDA --
+CREATE TABLE venda (
+    codVenda int PRIMARY KEY,
+    codCliente int,
+    FOREIGN KEY (codCliente) REFERENCES cliente (codCliente), 
+    codVendedor int,
+    dataVenda date DEFAULT (CURRENT_DATE),
+    enderecoEntrega VARCHAR(60),
+    estatus VARCHAR(30)
+    );
+
+
+-- TABELA ItemVenda --
+CREATE TABLE itemVenda (
+    codVenda int PRIMARY KEY,
+    FOREIGN KEY (codVenda) REFERENCES venda (codVenda), 
+    codProduto int PRIMARY KEY,
+    FOREIGN KEY (codProduto) REFERENCES produtoLote (codProduto), 
+    numeroLote int PRIMARY KEY,
+    FOREIGN KEY (numeroLote) REFERENCES produtoLote (numeroLote), 
+    quantidade DECIMAL(14, 2) NOT NULL CHECK (quantidade > 0)
+    );
+
+
+-- TABELA FORNECEDOR --
+CREATE TABLE fornecedor (
+    codFornecedor int PRIMARY KEY,
+    nomeFantasia VARCHAR(80) UNIQUE,
+    razaoSocial VARCHAR(80) NOT NULL UNIQUE,
+    ie VARCHAR(20) NOT NULL UNIQUE,
+    cgc VARCHAR(20) NOT NULL UNIQUE,
+    endereco VARCHAR(60),
+    telefone VARCHAR(20),
+    codCidade INT,
+    FOREIGN KEY (codCidade) REFERENCES cidade (codCidade)  
+    );
+
+
+-- TABELA PEDIDO -- 
+CREATE TABLE pedido (
+    codPedido INT AUTO_INCREMENT PRIMARY KEY,
+    dataRealizaçao DATE DEFAULT (CURRENT_DATE),
+    dataEntrega DATE,
+    codFornecedor INT,
+    FOREIGN KEY (codFornecedor) REFERENCES fornecedor (codFornecedor), 
+    valor DECIMAL (20, 2)
+    );
+
+
+-- TABELA ItemPedido -- 
+CREATE TABLE itemPedido (
+    codPedido int PRIMARY KEY,
+    FOREIGN KEY (codPedido) REFERENCES pedido (codPedido), 
+    codProduto int PRIMARY KEY,
+    FOREIGN KEY (codProduto) REFERENCES produto (codProduto), 
+    quantidade DECIMAL(14, 2) NOT NULL CHECK (quantidade > 0)
+    );
